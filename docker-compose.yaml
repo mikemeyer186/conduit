@@ -1,0 +1,49 @@
+services:
+    db:
+        image: postgres:17-alpine
+        container_name: conduit-db
+        restart: unless-stopped
+        env_file:
+            - .env
+        volumes:
+            - db_data:/var/lib/postgresql/data
+        networks:
+            - conduit-network
+
+    backend:
+        build:
+            context: ./conduit-backend
+        container_name: conduit-backend
+        restart: unless-stopped
+        depends_on:
+            - db
+        env_file:
+            - .env
+        volumes:
+            - static_files:/app/static
+        networks:
+            - conduit-network
+        ports:
+            - '8020:8020'
+        entrypoint: ['/app/entrypoint.sh']
+
+    frontend:
+        build:
+            context: ./conduit-frontend
+            args:
+                API_URL: ${API_URL}
+        container_name: conduit-frontend
+        restart: unless-stopped
+        depends_on:
+            - backend
+        networks:
+            - conduit-network
+        ports:
+            - '8282:80'
+
+volumes:
+    db_data:
+    static_files:
+
+networks:
+    conduit-network:
