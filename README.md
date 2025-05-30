@@ -95,7 +95,7 @@ docker compose down -v
 http://<your_host_ip>:8282
 
 # Django Backend
-http://<your_host_ip>:8020
+http://<your_host_ip>:8020/admin
 ```
 
 <br>
