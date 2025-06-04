@@ -1,6 +1,6 @@
 services:
     db:
-        image: postgres:17-alpine
+        image: postgres:13-alpine
         container_name: conduit-db
         restart: unless-stopped
         env_file:
