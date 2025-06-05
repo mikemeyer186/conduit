@@ -9,6 +9,8 @@ services:
             - db_data:/var/lib/postgresql/data
         networks:
             - conduit-network
+        ports:
+            - '5432:5432'
 
     backend:
         build:
