@@ -20,7 +20,6 @@ https://github.com/Developer-Akademie-GmbH/conduit-backend<br>
 ## Prerequisites
 
 -   Server with Docker and Docker Compose installed
--   Alternatively, you can run it on your local machine
 -   Git installed to clone the repository
 
 <br>
@@ -125,7 +124,7 @@ There are three services in the `docker-compose.yaml` file: `conduit-backend`, `
 
 #### conduit-db Service
 
--   `image`: The image that is used for the service. The default image is `Postgres 17-alpine`.
+-   `image`: The image that is used for the service. The default image is `Postgres 13-alpine`.
 -   `networks`: The network that is used by both services containers. The default network is `conduit-network`.
 -   `restart`: The restart policy for the container. The default policy is `unless-stopped`.
 -   `volumes`: The volume that is used to persist the data. The default volume is `db_data`.
