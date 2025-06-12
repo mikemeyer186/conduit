@@ -1,0 +1,10 @@
+# Environment
+.env
+.env.local
+
+# Logs
+*.log
+
+# Filsystem
+.DS_Store
+
