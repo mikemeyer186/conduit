@@ -1,0 +1,43 @@
+name: Deploy-SSH-Workflow
+
+on:
+    push:
+        branches: ['workflow']
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Deploy per SSH
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                  host: ${{ secrets.SSH_HOST }}
+                  port: ${{ secrets.SSH_PORT }}
+                  username: ${{ secrets.SSH_USER }}
+                  key: ${{ secrets.SSH_PRIVATE_KEY }}
+                  script: |
+                      set -e
+                      echo "Go to ~/repos..."
+                      cd ~/repos
+
+                      REPO_NAME="${{ github.event.repository.name }}"
+
+                      if [ -d "$REPO_NAME" ]; then
+                        echo "Repository exists – execute git pull"
+                        cd "$REPO_NAME"
+                        git pull origin ${{ github.ref_name }}
+                        git submodule update --init --recursive
+                      else
+                        echo "Clone Repo"
+                        git clone --recurse-submodules "${{ github.event.repository.ssh_url }}"
+                        cd "$REPO_NAME"
+                      fi
+
+                      echo "Stop Docker container"
+                      docker compose down || true
+
+                      echo "Start Docker container"
+                      docker compose up -d
+
+                      echo "Deployment completed"
