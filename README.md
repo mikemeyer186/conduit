@@ -13,7 +13,8 @@ https://github.com/Developer-Akademie-GmbH/conduit-backend<br>
 1. [Prerequisites](#prerequisites)
 2. [Quickstart](#quickstart)
 3. [Usage](#usage)
-4. [Checklist](project-checklist.pdf)
+4. [Github Actions](#github-actions)
+5. [Checklist](project-checklist.pdf)
 
 <br>
 
@@ -145,3 +146,9 @@ docker compose logs -f <service_name>
 
 > [!NOTE]
 > I enabled error and access logs in the Nginx configuration of the frontend.
+
+<br>
+
+## Github Actions
+
+This repository contains a Github Actions workflow that connects to your server and clones the repository or pulls the changes and starts the Docker containers. The workflow is triggered on every push to the specified branch in the workflow. The workflow is defined in the `.github/workflows/deploy.yml` file.
