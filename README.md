@@ -14,7 +14,7 @@ https://github.com/Developer-Akademie-GmbH/conduit-backend<br>
 2. [Quickstart](#quickstart)
 3. [Usage](#usage)
 4. [Github Actions](#github-actions)
-5. [Checklist](project-checklist.pdf)
+5. [Checklist](project_checklist_workflow.pdf)
 
 <br>
 
