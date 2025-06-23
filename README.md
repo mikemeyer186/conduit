@@ -152,3 +152,15 @@ docker compose logs -f <service_name>
 ## Github Actions
 
 This repository contains a Github Actions workflow that connects to your server and clones the repository or pulls the changes and starts the Docker containers. The workflow is triggered on every push to the specified branch in the workflow. The workflow is defined in the `.github/workflows/deploy.yml` file.
+
+> [!NOTE]
+> To use the Github Actions workflow, you need to set up the following secrets in your repository:
+
+-   `SSH_PRIVATE_KEY`: The private SSH key to connect to your server.
+-   `SSH_HOST`: The IP address of your server.
+-   `SSH_PORT`: The port to connect to your server.
+-   `SSH_USER`: The user to connect to your server.
+
+### Generate SSH Key
+
+You can generate a new SSH key with the following command:
