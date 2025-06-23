@@ -1,6 +1,6 @@
-# Conduit Server
+# Conduit Server with deploy workflow
 
-This repository contains the configuration of the Conduit application with Docker. You can run it on your local machine or on your server. The Conduit application contains three single containers composed via Docker Compose: `conduit-frontend`, `conduit-backend` and `conduit-db`. The frontend is an Angular application, the backend is a Django application and the database is a Postgres database. This repository serves as an infrastructure repository which contains the submodules of the frontend and backend repositories.
+This repository contains the configuration of the Conduit application with Docker. You can run it on your local machine or on your server. The Conduit application contains three single containers composed via Docker Compose: `conduit-frontend`, `conduit-backend` and `conduit-db`. The frontend is an Angular application, the backend is a Django application and the database is a Postgres database. This repository serves as an infrastructure repository which contains the submodules of the frontend and backend repositories. This repsitory contains also a Github Actions workflow. To get it running, please follow point 5 of table of content.
 
 The frontend and backend projects are forked from the following repositories:<br>
 https://github.com/Developer-Akademie-GmbH/conduit-frontend<br>
