@@ -9,7 +9,7 @@ jobs:
         runs-on: ubuntu-latest
 
         env:
-            DEPLOY_DIR: ~/repos # change the directory based on your environment
+            DEPLOY_DIR: $HOME/repos # change the directory based on your environment
             BRANCH_NAME: ${{ github.ref_name }}
 
         steps:
