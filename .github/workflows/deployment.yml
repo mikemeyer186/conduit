@@ -46,7 +46,7 @@ jobs:
               uses: docker/build-push-action@v6.18.0
               with:
                   context: ./conduit-backend
-                  file: ./conduit-backend/Dockerfile
+                  file: Dockerfile
                   push: true
                   tags: ${{ steps.meta-backend.outputs.tags }}
 
@@ -65,7 +65,7 @@ jobs:
               uses: docker/build-push-action@v6.18.0
               with:
                   context: ./conduit-frontend
-                  file: ./conduit-frontend/Dockerfile
+                  file: Dockerfile
                   push: true
                   tags: ${{ steps.meta-frontend.outputs.tags }}
 
@@ -88,7 +88,7 @@ jobs:
                   username: ${{ secrets.SSH_USER }}
                   key: ${{ secrets.SSH_PRIVATE_KEY }}
                   port: ${{ secrets.SSH_PORT }}
-                  source: docker-compose.yaml
+                  source: compose-deploy.yml
                   target: '$HOME/repos/${{ github.repository }}/docker-compose.yaml'
 
             - name: Run rocker compose file
