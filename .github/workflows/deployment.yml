@@ -45,8 +45,8 @@ jobs:
               id: push-backend
               uses: docker/build-push-action@v6.18.0
               with:
-                  context: .
-                  file: ./conduit-backend/Dockerfile
+                  context: /conduit-backend
+                  file: /conduit-backend/Dockerfile
                   push: true
                   tags: ${{ steps.meta-backend.outputs.tags }}
 
@@ -64,8 +64,8 @@ jobs:
               id: push-frontend
               uses: docker/build-push-action@v6.18.0
               with:
-                  context: .
-                  file: ./conduit-frontend/Dockerfile
+                  context: /conduit-frontend
+                  file: /conduit-frontend/Dockerfile
                   push: true
                   tags: ${{ steps.meta-frontend.outputs.tags }}
 
