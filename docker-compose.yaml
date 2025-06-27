@@ -13,9 +13,8 @@ services:
             - '5432:5432'
 
     backend:
-        build:
-            context: ./conduit-backend
         container_name: conduit-backend
+        image: ${BACKEND_IMAGE}
         restart: unless-stopped
         depends_on:
             - db
@@ -34,6 +33,7 @@ services:
             context: ./conduit-frontend
             args:
                 API_URL: ${API_URL}
+        image: ${FRONTEND_IMAGE}
         container_name: conduit-frontend
         restart: unless-stopped
         depends_on:
