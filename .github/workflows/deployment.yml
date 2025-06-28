@@ -44,6 +44,8 @@ jobs:
                   images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/conduit-backend
                   tags: |
                       type=ref,event=tag
+                  flavor: |
+                      latest=false
 
             - name: Build and push backend image
               id: push-backend
@@ -62,6 +64,8 @@ jobs:
                   images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/conduit-frontend
                   tags: |
                       type=ref,event=tag
+                  flavor: |
+                      latest=false
 
             - name: Build and push frontend image
               id: push-frontend
