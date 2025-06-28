@@ -29,12 +29,8 @@ services:
         entrypoint: ['/app/entrypoint.sh']
 
     frontend:
-        build:
-            context: ./conduit-frontend
-            args:
-                API_URL: ${API_URL}
-        image: ${FRONTEND_IMAGE}
         container_name: conduit-frontend
+        image: ${FRONTEND_IMAGE}
         restart: unless-stopped
         depends_on:
             - backend

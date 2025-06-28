@@ -75,6 +75,8 @@ jobs:
                   context: ./conduit-frontend
                   file: ./conduit-frontend/Dockerfile
                   push: true
+                  build-args: |
+                      API_URL=${{ secrets.API_URL }}
                   tags: ${{ steps.meta-frontend.outputs.tags }}
 
     deploy:
