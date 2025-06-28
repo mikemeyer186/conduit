@@ -22,6 +22,9 @@ https://github.com/Developer-Akademie-GmbH/conduit-backend<br>
 
 -   Server with Docker and Docker Compose installed
 -   Git installed to clone the repository
+-   SSH access to the server (key-based authentication required)
+-   Github account to use the Github Actions workflow
+-   Github repository with 'SECRETS' configured for the workflow
 
 <br>
 
@@ -151,7 +154,7 @@ docker compose logs -f <service_name>
 
 ## Github Actions
 
-This repository contains a Github Actions workflow that connects to your server, pulls the changes and starts the Docker containers. The workflow is triggered on every push to the specified branch in the workflow. The workflow is defined in the `.github/workflows/deploy.yml` file.
+This repository contains a Github Actions workflow that builds and pushes the frontend and the backend submodule repositories into the Github container registry. After that the application will be deployed be connecting to your server, copying the `docker-compose.yml` and starts the containers by pulling the images from `ghcr`. The workflow is defined in the `.github/workflows/deployment.yml` file.
 
 > [!NOTE]
 > To use the Github Actions workflow, you need to set up the following secrets in your Github repository:
@@ -160,6 +163,7 @@ This repository contains a Github Actions workflow that connects to your server,
 -   `SSH_HOST`: The IP address of your server.
 -   `SSH_PORT`: The port to connect to your server.
 -   `SSH_USER`: The user to connect to your server.
+-   `API_URL`: The API URL for the backend application (e.g., `http://<your_host_ip>:8020/api`).
 
 ### Generate SSH Key
 
@@ -173,7 +177,9 @@ ssh-keygen -t ed25519 -a 200 -C "your_email@example.com"
 
 ### Configuration of Github Actions Workflow
 
-You can configure the workflow in the `.github/workflows/deploy.yml` file. The following settings can be changed:
+You can configure the workflow in the `.github/workflows/deployment.yml` file. The following settings can be changed:
 
--   `branches`: The branch that is used to trigger the workflow. The default branch is `workflow`.
--   `DEPLOY_DIR`: The directory on your server where the repository is cloned. The default value is `$HOME/repos`.
+-   `tags`: The workflow is triggerd by pushing a tag that starts with `v` (e.g., `v1.0.0`). You can change this to any other tag pattern. The tag `latest`is deactivated by default, but you can enable it by changing the `flavor` setting in the `docker/metadata-action` step to `latest=true`.
+-   `branches`: The workflow is not triggered by pushing to a branch, but you can change this to any branch you want by uncommenting the line in the `on.push` section.
+-   `REGISTRY`: The registry where the images are pushed. The default value is `ghcr.io`.
+-   `target`: The target directory on your server where the `docker-compose.yml` file is copied. The default value is `$HOME/repos/${{ github.repository.name }}`. If you changed the directory name, you need to change the destination where the `docker-compose.yml` file is executed (Line 105 and 118 in the `deployment.yml` file).

@@ -2,6 +2,7 @@ name: Build-and-Deploy-Conduit
 
 on:
     push:
+        #branches: [ 'main' ]
         tags: ['v*.*.*']
 
 env:
@@ -89,6 +90,7 @@ jobs:
               run: |
                   export BACKEND_IMAGE="${{ needs.build-and-push-image.outputs.backend_tags }}"
                   export FRONTEND_IMAGE="${{ needs.build-and-push-image.outputs.frontend_tags }}"
+                  export API_URL="${{ secrets.API_URL }}"
                   envsubst < docker-compose.yaml > docker-compose.yml
 
             - name: Copy docker compose to VM via SSH
@@ -99,7 +101,8 @@ jobs:
                   key: ${{ secrets.SSH_PRIVATE_KEY }}
                   port: ${{ secrets.SSH_PORT }}
                   source: docker-compose.yml
-                  target: '$HOME/repos/${{ github.repository }}'
+                  # change to your target directory to your environment
+                  target: '$HOME/repos/${{ github.repository.name }}'
 
             - name: Run rocker compose file
               uses: appleboy/ssh-action@v1.0.3
@@ -108,11 +111,12 @@ jobs:
                   username: ${{ secrets.SSH_USER }}
                   key: ${{ secrets.SSH_PRIVATE_KEY }}
                   port: ${{ secrets.SSH_PORT }}
+                  # change to your target directory to your environment
                   script: |
                       set -e
                       echo "${{ secrets.GITHUB_TOKEN }}" \
                         | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
-                      cd "$HOME/repos/${{ github.repository }}"
+                      cd "$HOME/repos/${{ github.repository.name }}"
                       docker compose pull
                       docker compose down
                       docker compose up -d
