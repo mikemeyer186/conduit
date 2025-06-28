@@ -1,10 +1,8 @@
-name: Deployment-SSH-Workflow
+name: Build-and-Deploy-Conduit
 
 on:
     push:
-        branches: ['workflow']
-        tags:
-            - 'v*.*.*'
+        tags: ['v*.*.*']
 
 env:
     REGISTRY: ghcr.io
@@ -20,9 +18,16 @@ jobs:
             attestations: write
             id-token: write
 
+        outputs:
+            backend_tags: ${{ steps.meta-backend.outputs.tags }}
+            frontend_tags: ${{ steps.meta-frontend.outputs.tags }}
+
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
+              with:
+                  submodules: recursive
+                  fetch-depth: 0
 
             - name: Log in to the Container registry
               uses: docker/login-action@v3.4.0
@@ -37,9 +42,6 @@ jobs:
               uses: docker/metadata-action@v3.4.0
               with:
                   images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/conduit-backend
-                  tags: |
-                      type=semver, pattern={{version}}
-                      type=sha
 
             - name: Build and push backend image
               id: push-backend
@@ -56,9 +58,6 @@ jobs:
               uses: docker/metadata-action@v3.4.0
               with:
                   images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/conduit-frontend
-                  tags: |
-                      type=semver, pattern={{version}}
-                      type=sha
 
             - name: Build and push frontend image
               id: push-frontend
@@ -75,11 +74,14 @@ jobs:
         needs: build-and-push-image
 
         steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
             - name: Prepare docker compose file
               run: |
-                  export BACKEND_IMAGE=ghcr.io/…:${{ steps.meta-backend.outputs.tags }}
-                  export FRONTEND_IMAGE=ghcr.io/…:${{ steps.meta-frontend.outputs.tags }}
-                  envsubst < docker-compose.yaml > compose-deploy.yml
+                  export BACKEND_IMAGE="${{ needs.build-and-push-image.outputs.backend_tags }}"
+                  export FRONTEND_IMAGE="${{ needs.build-and-push-image.outputs.frontend_tags }}"
+                  envsubst < docker-compose.yaml > docker-compose.yml
 
             - name: Copy docker compose to VM via SSH
               uses: appleboy/scp-action@v0.1.7
@@ -88,8 +90,8 @@ jobs:
                   username: ${{ secrets.SSH_USER }}
                   key: ${{ secrets.SSH_PRIVATE_KEY }}
                   port: ${{ secrets.SSH_PORT }}
-                  source: docker-compose.yaml
-                  target: '$HOME/repos/${{ github.repository }}/docker-compose.yaml'
+                  source: docker-compose.yml
+                  target: '$HOME/repos/${{ github.repository }}'
 
             - name: Run rocker compose file
               uses: appleboy/ssh-action@v1.0.3
