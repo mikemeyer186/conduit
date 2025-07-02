@@ -20,8 +20,8 @@ jobs:
             id-token: write
 
         outputs:
-            backend_tags: ${{ steps.meta-backend.outputs.tags }}
-            frontend_tags: ${{ steps.meta-frontend.outputs.tags }}
+            backend_tag: ${{ steps.set-backend-tags.outputs.backend_version }}
+            frontend_tag: ${{ steps.set-frontend-tags.outputs.frontend_version }}
 
         steps:
             - name: Checkout repository
@@ -38,6 +38,11 @@ jobs:
                   password: ${{ secrets.GITHUB_TOKEN }}
 
             # Backend image
+            - name: Set backend tags for output (version)
+              id: set-backend-tags
+              run: |
+                  echo "backend_version=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+
             - name: Build and push backend image
               id: push-backend
               uses: docker/build-push-action@v6.18.0
@@ -51,6 +56,11 @@ jobs:
                       ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/conduit-backend:latest
 
             # Frontend image
+            - name: Set frontend tags for output (version)
+              id: set-frontend-tags
+              run: |
+                  echo "frontend_version=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+
             - name: Build and push frontend image
               id: push-frontend
               uses: docker/build-push-action@v6.18.0
@@ -76,8 +86,8 @@ jobs:
 
             - name: Prepare docker compose file
               run: |
-                  export BACKEND_IMAGE="${{ needs.build-and-push-image.outputs.backend_tags }}"
-                  export FRONTEND_IMAGE="${{ needs.build-and-push-image.outputs.frontend_tags }}"
+                  export BACKEND_IMAGE="${{ needs.build-and-push-image.outputs.backend_tag }}"
+                  export FRONTEND_IMAGE="${{ needs.build-and-push-image.outputs.frontend_tag }}"
                   export API_URL="${{ secrets.API_URL }}"
                   envsubst < docker-compose.yaml > docker-compose.yml
 
