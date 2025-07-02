@@ -41,7 +41,7 @@ jobs:
             - name: Set backend tags for output (version)
               id: set-backend-tags
               run: |
-                  echo "backend_version=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+                  echo "backend_version=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/conduit-backend:${{ github.ref_name }}" >> $GITHUB_OUTPUT
 
             - name: Build and push backend image
               id: push-backend
@@ -59,7 +59,7 @@ jobs:
             - name: Set frontend tags for output (version)
               id: set-frontend-tags
               run: |
-                  echo "frontend_version=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+                  echo "frontend_version=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/conduit-frontend:${{ github.ref_name }}" >> $GITHUB_OUTPUT
 
             - name: Build and push frontend image
               id: push-frontend
