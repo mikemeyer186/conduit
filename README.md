@@ -1,6 +1,6 @@
-# Conduit Server
+# Conduit Server with deploy workflow
 
-This repository contains the configuration of the Conduit application with Docker. You can run it on your local machine or on your server. The Conduit application contains three single containers composed via Docker Compose: `conduit-frontend`, `conduit-backend` and `conduit-db`. The frontend is an Angular application, the backend is a Django application and the database is a Postgres database. This repository serves as an infrastructure repository which contains the submodules of the frontend and backend repositories.
+This repository contains the configuration of the Conduit application with Docker. You can run it on your local machine or on your server. The Conduit application contains three single containers composed via Docker Compose: `conduit-frontend`, `conduit-backend` and `conduit-db`. The frontend is an Angular application, the backend is a Django application and the database is a Postgres database. This repository serves as an infrastructure repository which contains the submodules of the frontend and backend repositories. This repsitory contains also a Github Actions workflow. To get it running, please follow point 5 of table of content.
 
 The frontend and backend projects are forked from the following repositories:<br>
 https://github.com/Developer-Akademie-GmbH/conduit-frontend<br>
@@ -13,7 +13,8 @@ https://github.com/Developer-Akademie-GmbH/conduit-backend<br>
 1. [Prerequisites](#prerequisites)
 2. [Quickstart](#quickstart)
 3. [Usage](#usage)
-4. [Checklist](project-checklist.pdf)
+4. [Github Actions](#github-actions)
+5. [Checklist](project_checklist_workflow.pdf)
 
 <br>
 
@@ -21,6 +22,9 @@ https://github.com/Developer-Akademie-GmbH/conduit-backend<br>
 
 -   Server with Docker and Docker Compose installed
 -   Git installed to clone the repository
+-   SSH access to the server (key-based authentication required)
+-   Github account to use the Github Actions workflow
+-   Github repository with 'SECRETS' configured for the workflow
 
 <br>
 
@@ -145,3 +149,37 @@ docker compose logs -f <service_name>
 
 > [!NOTE]
 > I enabled error and access logs in the Nginx configuration of the frontend.
+
+<br>
+
+## Github Actions
+
+This repository contains a Github Actions workflow that builds and pushes the frontend and the backend submodule repositories into the Github container registry. After that the application will be deployed be connecting to your server, copying the `docker-compose.yml` and starts the containers by pulling the images from `ghcr`. The workflow is defined in the `.github/workflows/deployment.yml` file.
+
+> [!NOTE]
+> To use the Github Actions workflow, you need to set up the following secrets in your Github repository:
+
+-   `SSH_PRIVATE_KEY`: The private SSH key to connect to your server.
+-   `SSH_HOST`: The IP address of your server.
+-   `SSH_PORT`: The port to connect to your server.
+-   `SSH_USER`: The user to connect to your server.
+-   `API_URL`: The API URL for the backend application (e.g., `http://<your_host_ip>:8020/api`).
+
+### Generate SSH Key
+
+1. Generate a new SSH key on your server with the following command. The public key will be saved in `~/.ssh/id_ed25519.pub` and the private key in `~/.ssh/id_ed25519`.
+
+```shell
+ssh-keygen -t ed25519 -a 200 -C "your_email@example.com"
+```
+
+2. Add the public key to your server's `~/.ssh/authorized_keys` file to allow access via SSH and add the private key to your Github repository secrets as `SSH_PRIVATE_KEY`.
+
+### Configuration of Github Actions Workflow
+
+You can configure the workflow in the `.github/workflows/deployment.yml` file. The following settings can be changed:
+
+-   `tags`: The workflow is triggerd by pushing a tag that starts with `v` (e.g., `v1.0.0`). You can change this to any other tag pattern. The tag `latest`is deactivated by default, but you can enable it by changing the `flavor` setting in the `docker/metadata-action` step to `latest=true`.
+-   `branches`: The workflow is not triggered by pushing to a branch, but you can change this to any branch you want by uncommenting the line in the `on.push` section.
+-   `REGISTRY`: The registry where the images are pushed. The default value is `ghcr.io`.
+-   `target`: The target directory on your server where the `docker-compose.yml` file is copied. The default value is `$HOME/repos/${{ github.repository.name }}`. If you changed the directory name, you need to change the destination where the `docker-compose.yml` file is executed (Line 105 and 118 in the `deployment.yml` file).

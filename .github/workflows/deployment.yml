@@ -1,0 +1,122 @@
+name: Build-and-Deploy-Conduit
+
+on:
+    push:
+        #branches: [ 'main' ]
+        tags: ['v*.*.*']
+
+env:
+    REGISTRY: ghcr.io
+    IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+    build-and-push-image:
+        runs-on: ubuntu-latest
+
+        permissions:
+            contents: read
+            packages: write
+            attestations: write
+            id-token: write
+
+        outputs:
+            backend_tag: ${{ steps.set-backend-tags.outputs.backend_version }}
+            frontend_tag: ${{ steps.set-frontend-tags.outputs.frontend_version }}
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+              with:
+                  submodules: recursive
+                  fetch-depth: 0
+
+            - name: Log in to the Container registry
+              uses: docker/login-action@v3.4.0
+              with:
+                  registry: ${{ env.REGISTRY }}
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            # Backend image
+            - name: Set backend tags for output (version)
+              id: set-backend-tags
+              run: |
+                  echo "backend_version=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/conduit-backend:${{ github.ref_name }}" >> $GITHUB_OUTPUT
+
+            - name: Build and push backend image
+              id: push-backend
+              uses: docker/build-push-action@v6.18.0
+              with:
+                  context: ./conduit-backend
+                  file: ./conduit-backend/Dockerfile
+                  push: true
+                  tags: |
+                      ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/conduit-backend:${{ github.ref_name }}
+                      ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/conduit-backend:${{ github.sha }}
+                      ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/conduit-backend:latest
+
+            # Frontend image
+            - name: Set frontend tags for output (version)
+              id: set-frontend-tags
+              run: |
+                  echo "frontend_version=${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/conduit-frontend:${{ github.ref_name }}" >> $GITHUB_OUTPUT
+
+            - name: Build and push frontend image
+              id: push-frontend
+              uses: docker/build-push-action@v6.18.0
+              with:
+                  context: ./conduit-frontend
+                  file: ./conduit-frontend/Dockerfile
+                  push: true
+                  build-args: |
+                      API_URL=${{ secrets.API_URL }}
+                  tags: |
+                      ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/conduit-frontend:${{ github.ref_name }}
+                      ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/conduit-frontend:${{ github.sha }}
+                      ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/conduit-frontend:latest
+
+    deploy:
+        name: Deploy to VM via SSH
+        runs-on: ubuntu-latest
+        needs: build-and-push-image
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Prepare docker compose file
+              run: |
+                  export BACKEND_IMAGE="${{ needs.build-and-push-image.outputs.backend_tag }}"
+                  export FRONTEND_IMAGE="${{ needs.build-and-push-image.outputs.frontend_tag }}"
+                  export API_URL="${{ secrets.API_URL }}"
+                  envsubst < docker-compose.yaml > docker-compose.yml
+
+            - name: Copy docker compose to VM via SSH
+              uses: appleboy/scp-action@v0.1.7
+              with:
+                  host: ${{ secrets.SSH_HOST }}
+                  username: ${{ secrets.SSH_USER }}
+                  key: ${{ secrets.SSH_PRIVATE_KEY }}
+                  port: ${{ secrets.SSH_PORT }}
+                  source: docker-compose.yml
+                  # change to your target directory to your environment
+                  target: '$HOME/repos/${{ github.event.repository.name }}'
+
+            - name: Run rocker compose file
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                  host: ${{ secrets.SSH_HOST }}
+                  username: ${{ secrets.SSH_USER }}
+                  key: ${{ secrets.SSH_PRIVATE_KEY }}
+                  port: ${{ secrets.SSH_PORT }}
+                  # change to your target directory to your environment
+                  script: |
+                      set -e
+                      echo "${{ secrets.GITHUB_TOKEN }}" \
+                        | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+                      cd "$HOME/repos/${{ github.event.repository.name }}"
+                      docker compose down --remove-orphans
+                      docker container prune -f
+                      docker compose up -d
+
+                      echo "Deployment completed successfully!"

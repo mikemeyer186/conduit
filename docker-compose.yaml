@@ -13,9 +13,8 @@ services:
             - '5432:5432'
 
     backend:
-        build:
-            context: ./conduit-backend
         container_name: conduit-backend
+        image: ${BACKEND_IMAGE}
         restart: unless-stopped
         depends_on:
             - db
@@ -30,11 +29,8 @@ services:
         entrypoint: ['/app/entrypoint.sh']
 
     frontend:
-        build:
-            context: ./conduit-frontend
-            args:
-                API_URL: ${API_URL}
         container_name: conduit-frontend
+        image: ${FRONTEND_IMAGE}
         restart: unless-stopped
         depends_on:
             - backend
